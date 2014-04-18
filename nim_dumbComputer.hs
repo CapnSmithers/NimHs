@@ -3,6 +3,9 @@
 
 module DumbNim where
 
+    -- TODO: Sort out human move, it's allowing you to take from an empty row
+    -- Also not allowing you to take valid moves in some cases
+
     data Player = Human | Computer
         deriving (Eq, Show, Bounded, Enum)
     type Row = Int
@@ -15,42 +18,68 @@ module DumbNim where
         "Row 2: " ++ (concat $ replicate (bd !! 1) "|") ++ "\n" ++
         "Row 3: " ++ (concat $ replicate (bd !! 2) "|") ++ "\n"
 
-    humanMove :: Board -> Board
-    humanMove
+    -- Validates human move and passes to makeMove
+    humanMove :: Board -> Move -> (Bool, Board)
+    humanMove bd mv@(row, take)
+        | valid = (True, makeMove bd (row-1, take))
+        | otherwise = (False, bd)
+        where validRow = (row >= 1 && row <= 3) && (bd !! row-1) /= 0
+              validTake = validRow && (take > 0 && take <= (bd !! row-1))
+              valid = validRow && validTake
 
 
     compMove :: Board -> Board
-    compMove
+    compMove bd = bd -- take all sticks from first available row
+
+    -- Similar to the move fn in computer tic-tac-toe.  Recursively applies
+    -- move to board.  More Haskell-like than using case
+    makeMove :: Board -> Move -> Board
+    makeMove (bdVal:bd) (row, take) 
+        | row > 0 = bdVal:[] ++ makeMove bd ((row - 1), take)
+        | otherwise = (bdVal - take):[] ++ bd
 
     winner :: Board -> Player -> String
-    winner board player = 
+    winner board player 
         -- Logic to determine winner
         | not empty = ""
-        | empty && player == Human = "Computer"
-        | empty && player == Computer = "Human"
+        | empty && (player == Human) = "Computer"
+        | empty && (player == Computer) = "Human"
         | otherwise = ""
         where
             empty = (length $ filter (\x -> x /= 0) board) == 0
             
-    play :: Board -> Player -> Io ()
-    play board player = do
-        if ((winner board player) /= "")
+    play :: Board -> IO ()
+    play board = do
+        if ((winner board Human) /= "")
             then do 
-                putStrLn ("Winner is: " ++ show (winner board player))
+                putStrLn ("Winner is: " ++ show (winner board Human))
             else do
-                -- Play game move'
-                if (player == Human)
-                    then do 
-                        -- Human move
-                        let newBoard = humanMove board
-                        play newBoard Computer
-                    else do
-                        -- Computer move
-                        let newBoard = compMove board
-                        play newBoard Human
+                putStrLn $ displayBoard board
+                -- Play game move'                
+                -- Human move
+                print "Enter a row (1-3): "
+                row <- getLine
+                print "Enter a number of sticks: "
+                take <- getLine
 
+                let mv = (read (row), read (take))
+                putStrLn $ show mv
+                let (valid, hBoard) = humanMove board mv
+                if (valid)
+                    then do
+                        putStrLn $ show hBoard
+
+                        if (winner board Computer /= "")
+                            then do putStrLn ("Winner is: " ++ show (winner board Computer))
+                            else do
+                                putStrLn $ displayBoard hBoard
+                                let cBoard = compMove hBoard
+                                play cBoard
+                    else do
+                        putStrLn "\nNot a possible move!\n"
+                        play board
 
     main = do
-        board = [4,3,7]
-        putStrLn "Let's play!"
-        play board Human
+        let board = [4,3,7]
+        putStrLn "Let's play!\n"
+        play board
