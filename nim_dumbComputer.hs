@@ -20,23 +20,23 @@ module DumbNim where
 
     -- Validates human move and passes to makeMove
     humanMove :: Board -> Move -> (Bool, Board)
-    humanMove bd mv@(row, take)
-        | valid = (True, makeMove bd (row-1, take))
+    humanMove bd mv@(row, sticks)
+        | valid = (True, makeMove bd (row-1, sticks))
         | otherwise = (False, bd)
-        where validRow = (row >= 1 && row <= 3) && (bd !! row-1) /= 0
-              validTake = validRow && (take > 0 && take <= (bd !! row-1))
-              valid = validRow && validTake
+        where validRow = (row >= 1 && row <= 3) && (bd !! (row-1)) /= 0
+              validSticks = validRow && sticks > 0 && sticks <= (bd !! (row-1))
+              valid = validRow && validSticks
 
 
     compMove :: Board -> Board
-    compMove bd = bd -- take all sticks from first available row
+    compMove bd = bd -- sticks all sticks from first available row
 
     -- Similar to the move fn in computer tic-tac-toe.  Recursively applies
     -- move to board.  More Haskell-like than using case
     makeMove :: Board -> Move -> Board
-    makeMove (bdVal:bd) (row, take) 
-        | row > 0 = bdVal:[] ++ makeMove bd ((row - 1), take)
-        | otherwise = (bdVal - take):[] ++ bd
+    makeMove (bdVal:bd) (row, sticks) 
+        | row > 0 = bdVal:[] ++ makeMove bd ((row - 1), sticks)
+        | otherwise = (bdVal - sticks):[] ++ bd
 
     winner :: Board -> Player -> String
     winner board player 
@@ -57,12 +57,12 @@ module DumbNim where
                 putStrLn $ displayBoard board
                 -- Play game move'                
                 -- Human move
-                print "Enter a row (1-3): "
+                putStr "Enter a row (1-3): "
                 row <- getLine
-                print "Enter a number of sticks: "
-                take <- getLine
+                putStr ("Enter a number of sticks: ")
+                sticks <- getLine
 
-                let mv = (read (row), read (take))
+                let mv = (read (row), read (sticks))
                 putStrLn $ show mv
                 let (valid, hBoard) = humanMove board mv
                 if (valid)
