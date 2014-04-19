@@ -14,9 +14,9 @@ module DumbNim where
 
     displayBoard :: Board -> String
     displayBoard bd = 
-        "Row 1: " ++ (concat $ replicate (bd !! 0) "|") ++ "\n" ++ 
-        "Row 2: " ++ (concat $ replicate (bd !! 1) "|") ++ "\n" ++
-        "Row 3: " ++ (concat $ replicate (bd !! 2) "|") ++ "\n"
+        "Row 1: " ++ (concat $ replicate (bd !! 0) "|") ++ " \n" ++ 
+        "Row 2: " ++ (concat $ replicate (bd !! 1) "|") ++ " \n" ++
+        "Row 3: " ++ (concat $ replicate (bd !! 2) "|") ++ " \n"
 
     -- Validates human move and passes to makeMove
     humanMove :: Board -> Move -> (Bool, Board)
@@ -29,7 +29,11 @@ module DumbNim where
 
 
     compMove :: Board -> Board
-    compMove bd = bd -- sticks all sticks from first available row
+    compMove bd
+        | ((bd !! 0) > 0) = [0, (bd !! 1), (bd !! 2)]
+        | ((bd !! 1) > 0) = [(bd!!0), 0, (bd!!2)]
+        | ((bd !! 2) > 0) = [(bd!!0), (bd!!1), 0]
+        | otherwise = bd
 
     -- Similar to the move fn in computer tic-tac-toe.  Recursively applies
     -- move to board.  More Haskell-like than using case
@@ -42,8 +46,8 @@ module DumbNim where
     winner board player 
         -- Logic to determine winner
         | not empty = ""
-        | empty && (player == Human) = "Computer"
-        | empty && (player == Computer) = "Human"
+        | empty && (player == Human) = "Human"
+        | empty && (player == Computer) = "Computer"
         | otherwise = ""
         where
             empty = (length $ filter (\x -> x /= 0) board) == 0
@@ -69,8 +73,8 @@ module DumbNim where
                     then do
                         putStrLn $ show hBoard
 
-                        if (winner board Computer /= "")
-                            then do putStrLn ("Winner is: " ++ show (winner board Computer))
+                        if (winner hBoard Computer /= "")
+                            then do putStrLn ("Winner is: " ++ show (winner hBoard Computer))
                             else do
                                 putStrLn $ displayBoard hBoard
                                 let cBoard = compMove hBoard
